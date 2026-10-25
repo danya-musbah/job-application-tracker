@@ -1,0 +1,68 @@
+/* =========================================================================
+   Responsive breakpoints
+   Tested conceptually at: 320 375 425 768 1024 1280 1440 1920
+   ========================================================================= */
+
+/* Large desktops */
+@media (min-width: 1440px) {
+  .view { padding: var(--space-6) var(--space-6); max-width: 1600px; margin: 0 auto; }
+}
+
+/* Laptops / small desktops down to tablets */
+@media (max-width: 1279px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .dashboard-grid, .settings-grid { grid-template-columns: 1fr; }
+  .filters-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Tablets */
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 90; transform: translateX(-100%);
+    transition: transform var(--transition); box-shadow: var(--shadow-md);
+  }
+  .sidebar.is-open { transform: translateX(0); }
+  .sidebar-toggle { display: inline-flex; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+/* Mobile phones (large) */
+@media (max-width: 767px) {
+  .topbar { padding: var(--space-3) var(--space-4); }
+  .topbar-title { font-size: 1.1rem; }
+  .view { padding: var(--space-4); }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+  .stat-card { padding: var(--space-3); }
+  .stat-card .stat-value { font-size: 1.35rem; }
+
+  /* Force card view on mobile regardless of toggle */
+  .table-wrap { display: none !important; }
+  .cards-grid { display: grid !important; }
+  .view-toggle { display: none; }
+
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .search-box { width: 100%; }
+  .filters-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+
+  .modal { max-width: 100%; max-height: 100dvh; border-radius: 0; height: 100dvh; }
+  .modal-overlay { padding: 0; }
+
+  .notif-panel { width: calc(100vw - 32px); right: -8px; }
+
+  /* Bottom nav instead of sidebar drawer content list, but keep drawer for full menu */
+  .sidebar { width: 82vw; max-width: 300px; }
+}
+
+/* Small phones */
+@media (max-width: 424px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .auth-card { padding: var(--space-4); }
+  .btn { padding: 10px 14px; font-size: 0.9rem; }
+}
+
+/* Touch targets: ensure comfortably large tap areas on touch devices */
+@media (pointer: coarse) {
+  .btn, .icon-btn, .nav-item, input, select, textarea, .pagination button { min-height: 44px; }
+}

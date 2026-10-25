@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Job Application Tracker</title>
+<meta name="description" content="Track and manage your entire job search: applications, interviews, follow-ups and analytics." />
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+<div id="offline-banner" class="offline-banner" hidden>You're offline — changes will not be saved until your connection returns.</div>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<main id="auth-view" class="auth-view">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="brand-mark" aria-hidden="true">JT</span>
+      <h1>Job Application Tracker</h1>
+      <p>Stay organized. Land the job.</p>
+    </div>
+
+    <div class="auth-tabs" role="tablist" aria-label="Authentication">
+      <button class="auth-tab is-active" id="tab-login" role="tab" aria-selected="true" aria-controls="login-panel">Log In</button>
+      <button class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="register-panel">Sign Up</button>
+    </div>
+
+    <form id="login-form" class="auth-form" novalidate>
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input id="login-email" name="email" type="email" autocomplete="email" required />
+        <p class="field-error" data-error-for="email"></p>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+        <p class="field-error" data-error-for="password"></p>
+      </div>
+      <p class="form-message" id="login-message" role="alert"></p>
+      <button type="submit" class="btn btn-primary btn-block" id="login-submit">
+        <span class="btn-label">Log In</span>
+      </button>
+    </form>
+
+    <form id="register-form" class="auth-form" novalidate hidden>
+      <div class="form-group">
+        <label for="register-name">Full name</label>
+        <input id="register-name" name="name" type="text" autocomplete="name" required maxlength="100" />
+        <p class="field-error" data-error-for="name"></p>
+      </div>
+      <div class="form-group">
+        <label for="register-email">Email</label>
+        <input id="register-email" name="email" type="email" autocomplete="email" required />
+        <p class="field-error" data-error-for="email"></p>
+      </div>
+      <div class="form-group">
+        <label for="register-password">Password</label>
+        <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8" />
+        <p class="field-hint">At least 8 characters, with an uppercase letter, a lowercase letter, and a number.</p>
+        <p class="field-error" data-error-for="password"></p>
+      </div>
+      <p class="form-message" id="register-message" role="alert"></p>
+      <button type="submit" class="btn btn-primary btn-block" id="register-submit">
+        <span class="btn-label">Create Account</span>
+      </button>
+    </form>
+  </div>
+</main>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="app-shell" class="app-shell" hidden>
+
+  <!-- Sidebar (desktop) / Drawer (mobile) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark" aria-hidden="true">JT</span>
+      <span class="brand-name">Job Tracker</span>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <button class="nav-item is-active" data-view="dashboard">
+        <svg class="icon nav-icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#layout-dashboard"></use></svg> Dashboard
+      </button>
+      <button class="nav-item" data-view="applications">
+        <svg class="icon nav-icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#briefcase-business"></use></svg> Applications
+      </button>
+      <button class="nav-item" data-view="interviews">
+        <svg class="icon nav-icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#users-round"></use></svg> Interviews
+      </button>
+      <button class="nav-item" data-view="followups">
+        <svg class="icon nav-icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#refresh-cw"></use></svg> Follow-Ups
+      </button>
+      <button class="nav-item" data-view="analytics">
+        <svg class="icon nav-icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#chart-no-axes-column-increasing"></use></svg> Analytics
+      </button>
+      <button class="nav-item" data-view="settings">
+        <svg class="icon nav-icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#settings"></use></svg> Settings
+      </button>
+    </nav>
+    <button class="btn btn-outline btn-block sidebar-logout" id="logout-btn">Log Out</button>
+  </aside>
+
+  <div class="app-main">
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="icon-btn sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#menu"></use></svg></button>
+      <h2 class="topbar-title" id="topbar-title">Dashboard</h2>
+      <div class="topbar-actions">
+        <div class="notif-wrap">
+          <button class="icon-btn" id="notif-btn" aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#bell"></use></svg><span class="notif-badge" id="notif-badge" hidden>0</span>
+          </button>
+          <div class="notif-panel" id="notif-panel" hidden></div>
+        </div>
+        <button class="btn btn-primary" id="quick-add-btn"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#plus"></use></svg> Add Application</button>
+      </div>
+    </header>
+
+    <!-- ===================== DASHBOARD VIEW ===================== -->
+    <section class="view" id="view-dashboard" data-view-panel="dashboard">
+      <div class="stats-grid" id="stats-grid"></div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3>Applications Over Time</h3>
+          <div id="chart-over-time" class="chart-holder"></div>
+        </div>
+        <div class="card">
+          <h3>Applications by Status</h3>
+          <div id="chart-by-status" class="chart-holder"></div>
+        </div>
+        <div class="card">
+          <h3>Applications by Source</h3>
+          <div id="chart-by-source" class="chart-holder"></div>
+        </div>
+        <div class="card">
+          <h3>Funnel Rates</h3>
+          <div id="chart-rates" class="rates-holder"></div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid dashboard-grid-2">
+        <div class="card">
+          <h3>Upcoming Interviews</h3>
+          <ul class="mini-list" id="upcoming-interviews-list"></ul>
+        </div>
+        <div class="card">
+          <h3>Follow-Ups Needing Attention</h3>
+          <ul class="mini-list" id="followups-attention-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== APPLICATIONS VIEW ===================== -->
+    <section class="view" id="view-applications" data-view-panel="applications" hidden>
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="search" id="app-search" placeholder="Search company, title, location, contact, tags..." aria-label="Search applications" />
+        </div>
+        <button class="btn btn-outline" id="filters-toggle-btn">Filters</button>
+        <select id="sort-select" aria-label="Sort applications">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="company">Company (A-Z)</option>
+          <option value="jobTitle">Job title (A-Z)</option>
+          <option value="status">Status</option>
+          <option value="priority">Priority</option>
+          <option value="salary">Salary (high-low)</option>
+          <option value="applicationDate">Application date</option>
+        </select>
+        <div class="view-toggle" role="group" aria-label="Display mode">
+          <button class="view-toggle-btn is-active" data-mode="table" aria-label="Table view"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#table"></use></svg></button>
+          <button class="view-toggle-btn" data-mode="card" aria-label="Card view"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#layout-grid"></use></svg></button>
+        </div>
+        <button class="btn btn-outline" id="export-btn">Export</button>
+        <button class="btn btn-outline" id="import-btn">Import</button>
+      </div>
+
+      <div class="filters-panel" id="filters-panel" hidden>
+        <div class="filters-grid">
+          <div class="form-group">
+            <label for="filter-status">Status</label>
+            <select id="filter-status"><option value="">All</option></select>
+          </div>
+          <div class="form-group">
+            <label for="filter-priority">Priority</label>
+            <select id="filter-priority">
+              <option value="">All</option><option>Low</option><option>Medium</option><option>High</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-location-type">Location type</label>
+            <select id="filter-location-type">
+              <option value="">All</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="onsite">On-site</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-employment-type">Employment type</label>
+            <select id="filter-employment-type">
+              <option value="">All</option>
+              <option value="full-time">Full-time</option><option value="part-time">Part-time</option>
+              <option value="contract">Contract</option><option value="internship">Internship</option>
+              <option value="temporary">Temporary</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-source">Job source</label>
+            <select id="filter-source"><option value="">All</option></select>
+          </div>
+          <div class="form-group">
+            <label for="filter-date-from">Applied from</label>
+            <input type="date" id="filter-date-from" />
+          </div>
+          <div class="form-group">
+            <label for="filter-date-to">Applied to</label>
+            <input type="date" id="filter-date-to" />
+          </div>
+          <div class="form-group">
+            <label for="filter-salary-min">Min salary</label>
+            <input type="number" id="filter-salary-min" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="filter-salary-max">Max salary</label>
+            <input type="number" id="filter-salary-max" min="0" />
+          </div>
+        </div>
+        <div class="filters-actions">
+          <button class="btn btn-outline" id="clear-filters-btn">Clear filters</button>
+          <button class="btn btn-primary" id="apply-filters-btn">Apply filters</button>
+        </div>
+      </div>
+
+      <div id="applications-loading" class="loading-state" hidden>Loading applications...</div>
+      <div id="applications-empty" class="empty-state" hidden>
+        <p>No applications yet.</p>
+        <p class="empty-sub">Start tracking your first job application.</p>
+        <button class="btn btn-primary" id="empty-add-btn"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#plus"></use></svg> Add Application</button>
+      </div>
+      <div id="applications-network-error" class="empty-state" hidden>
+        <p>Couldn't load applications.</p>
+        <p class="empty-sub">Check your connection and try again.</p>
+        <button class="btn btn-outline" id="retry-applications-btn">Retry</button>
+      </div>
+
+      <div class="table-wrap" id="applications-table-wrap" hidden>
+        <table class="data-table" id="applications-table">
+          <thead>
+            <tr>
+              <th>Company</th><th>Job Title</th><th>Status</th><th>Priority</th>
+              <th>Location</th><th>Applied</th><th>Salary</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="applications-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="cards-grid" id="applications-cards" hidden></div>
+
+      <nav class="pagination" id="pagination" aria-label="Pagination" hidden></nav>
+    </section>
+
+    <!-- ===================== INTERVIEWS VIEW ===================== -->
+    <section class="view" id="view-interviews" data-view-panel="interviews" hidden>
+      <div class="toolbar">
+        <label class="checkbox-inline">
+          <input type="checkbox" id="interviews-upcoming-only" /> Upcoming only
+        </label>
+        <button class="btn btn-primary" id="add-interview-btn"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#plus"></use></svg> Schedule Interview</button>
+      </div>
+      <div id="interviews-empty" class="empty-state" hidden>
+        <p>No interviews yet.</p>
+        <p class="empty-sub">Schedule your first interview to see it here.</p>
+      </div>
+      <div class="cards-grid" id="interviews-list"></div>
+    </section>
+
+    <!-- ===================== FOLLOW-UPS VIEW ===================== -->
+    <section class="view" id="view-followups" data-view-panel="followups" hidden>
+      <div class="toolbar">
+        <select id="followups-filter">
+          <option value="">All</option>
+          <option value="overdue">Overdue</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="completed">Completed</option>
+        </select>
+        <button class="btn btn-primary" id="add-followup-btn"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#plus"></use></svg> Add Follow-Up</button>
+      </div>
+      <div id="followups-empty" class="empty-state" hidden>
+        <p>No follow-ups yet.</p>
+        <p class="empty-sub">Schedule a follow-up to stay on top of your applications.</p>
+      </div>
+      <ul class="mini-list mini-list-lg" id="followups-list"></ul>
+    </section>
+
+    <!-- ===================== ANALYTICS VIEW ===================== -->
+    <section class="view" id="view-analytics" data-view-panel="analytics" hidden>
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3>Applications Over Time</h3>
+          <div id="analytics-chart-over-time" class="chart-holder"></div>
+        </div>
+        <div class="card">
+          <h3>Status Breakdown</h3>
+          <div id="analytics-chart-status" class="chart-holder"></div>
+        </div>
+        <div class="card">
+          <h3>Source Breakdown</h3>
+          <div id="analytics-chart-source" class="chart-holder"></div>
+        </div>
+        <div class="card">
+          <h3>Interview / Offer / Rejection Rate</h3>
+          <div id="analytics-chart-rates" class="rates-holder"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SETTINGS VIEW ===================== -->
+    <section class="view" id="view-settings" data-view-panel="settings" hidden>
+      <div class="settings-grid">
+        <div class="card">
+          <h3>Profile</h3>
+          <form id="profile-form" class="stacked-form" novalidate>
+            <div class="form-group">
+              <label for="settings-name">Name</label>
+              <input id="settings-name" name="name" type="text" maxlength="100" required />
+            </div>
+            <div class="form-group">
+              <label for="settings-email">Email</label>
+              <input id="settings-email" name="email" type="email" required />
+            </div>
+            <p class="form-message" id="profile-message" role="alert"></p>
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Change Password</h3>
+          <form id="password-form" class="stacked-form" novalidate>
+            <div class="form-group">
+              <label for="current-password">Current password</label>
+              <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required />
+            </div>
+            <div class="form-group">
+              <label for="new-password">New password</label>
+              <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+              <p class="field-hint">At least 8 characters, with an uppercase letter, a lowercase letter, and a number.</p>
+            </div>
+            <p class="form-message" id="password-message" role="alert"></p>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Preferences</h3>
+          <form id="preferences-form" class="stacked-form" novalidate>
+            <div class="form-group">
+              <label for="pref-default-status">Default application status</label>
+              <select id="pref-default-status"></select>
+            </div>
+            <div class="form-group">
+              <label for="pref-currency">Default currency</label>
+              <input id="pref-currency" name="defaultCurrency" type="text" maxlength="3" minlength="3" style="text-transform:uppercase" />
+            </div>
+            <div class="form-group">
+              <label for="pref-reminder-days">Remind me after inactive for (days)</label>
+              <input id="pref-reminder-days" name="reminderDays" type="number" min="1" max="90" />
+            </div>
+            <div class="form-group">
+              <label for="pref-items-per-page">Items per page</label>
+              <input id="pref-items-per-page" name="itemsPerPage" type="number" min="5" max="100" />
+            </div>
+            <p class="form-message" id="preferences-message" role="alert"></p>
+            <button type="submit" class="btn btn-primary">Save Preferences</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Appearance</h3>
+          <div class="theme-options" role="radiogroup" aria-label="Theme">
+            <label class="theme-option"><input type="radio" name="theme" value="light" /> Light</label>
+            <label class="theme-option"><input type="radio" name="theme" value="dark" /> Dark</label>
+            <label class="theme-option"><input type="radio" name="theme" value="system" /> System</label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Custom Job Sources</h3>
+          <form id="job-source-form" class="inline-form" novalidate>
+            <input type="text" id="new-job-source" placeholder="e.g. Company career fair" maxlength="100" />
+            <button type="submit" class="btn btn-outline">Add</button>
+          </form>
+          <ul class="tag-list" id="job-sources-list"></ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ===================== APPLICATION FORM MODAL ===================== -->
+<div class="modal-overlay" id="application-modal" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="application-modal-title">
+    <div class="modal-header">
+      <h3 id="application-modal-title">Add Application</h3>
+      <button class="icon-btn modal-close" data-close-modal="application-modal" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#x"></use></svg></button>
+    </div>
+    <form id="application-form" class="modal-body stacked-form" novalidate>
+      <input type="hidden" id="app-id" />
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="app-company">Company name *</label>
+          <input id="app-company" name="companyName" required maxlength="200" />
+          <p class="field-error" data-error-for="companyName"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-title">Job title *</label>
+          <input id="app-title" name="jobTitle" required maxlength="200" />
+          <p class="field-error" data-error-for="jobTitle"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-url">Job URL</label>
+          <input id="app-url" name="jobUrl" type="url" placeholder="https://..." />
+          <p class="field-error" data-error-for="jobUrl"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-location">Location</label>
+          <input id="app-location" name="location" maxlength="200" />
+        </div>
+        <div class="form-group">
+          <label for="app-location-type">Location type</label>
+          <select id="app-location-type" name="locationType">
+            <option value="onsite">On-site</option><option value="hybrid">Hybrid</option><option value="remote">Remote</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="app-employment-type">Employment type</label>
+          <select id="app-employment-type" name="employmentType">
+            <option value="full-time">Full-time</option><option value="part-time">Part-time</option>
+            <option value="contract">Contract</option><option value="internship">Internship</option>
+            <option value="temporary">Temporary</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="app-salary-min">Salary min</label>
+          <input id="app-salary-min" name="salaryMin" type="number" min="0" />
+          <p class="field-error" data-error-for="salaryMin"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-salary-max">Salary max</label>
+          <input id="app-salary-max" name="salaryMax" type="number" min="0" />
+          <p class="field-error" data-error-for="salaryMax"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-currency">Currency</label>
+          <input id="app-currency" name="currency" maxlength="3" minlength="3" style="text-transform:uppercase" />
+        </div>
+        <div class="form-group">
+          <label for="app-date">Application date *</label>
+          <input id="app-date" name="applicationDate" type="date" required />
+          <p class="field-error" data-error-for="applicationDate"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-source">Job source</label>
+          <select id="app-source" name="jobSource"><option value="">Select...</option></select>
+        </div>
+        <div class="form-group">
+          <label for="app-status">Status</label>
+          <select id="app-status" name="status"></select>
+        </div>
+        <div class="form-group">
+          <label for="app-priority">Priority</label>
+          <select id="app-priority" name="priority">
+            <option>Low</option><option selected>Medium</option><option>High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="app-contact-person">Contact person</label>
+          <input id="app-contact-person" name="contactPerson" maxlength="150" />
+        </div>
+        <div class="form-group">
+          <label for="app-contact-email">Contact email</label>
+          <input id="app-contact-email" name="contactEmail" type="email" />
+          <p class="field-error" data-error-for="contactEmail"></p>
+        </div>
+        <div class="form-group">
+          <label for="app-resume">Resume version</label>
+          <input id="app-resume" name="resumeVersion" maxlength="150" placeholder="e.g. Resume_v3_backend.pdf" />
+        </div>
+        <div class="form-group">
+          <label for="app-cover-letter">Cover letter version</label>
+          <input id="app-cover-letter" name="coverLetterVersion" maxlength="150" />
+        </div>
+        <div class="form-group form-group-full">
+          <label for="app-tags">Tags (comma separated)</label>
+          <input id="app-tags" name="tagsInput" placeholder="e.g. dream-job, backend, referral" />
+        </div>
+        <div class="form-group form-group-full">
+          <label for="app-notes">Notes</label>
+          <textarea id="app-notes" name="notes" rows="4" maxlength="5000"></textarea>
+        </div>
+      </div>
+      <p class="form-message" id="application-form-message" role="alert"></p>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="application-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="application-form-submit">Save Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== APPLICATION DETAIL MODAL ===================== -->
+<div class="modal-overlay" id="detail-modal" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+    <div class="modal-header">
+      <h3 id="detail-modal-title">Application Details</h3>
+      <button class="icon-btn modal-close" data-close-modal="detail-modal" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#x"></use></svg></button>
+    </div>
+    <div class="modal-body" id="detail-modal-body"></div>
+  </div>
+</div>
+
+<!-- ===================== INTERVIEW FORM MODAL ===================== -->
+<div class="modal-overlay" id="interview-modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="interview-modal-title">
+    <div class="modal-header">
+      <h3 id="interview-modal-title">Schedule Interview</h3>
+      <button class="icon-btn modal-close" data-close-modal="interview-modal" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#x"></use></svg></button>
+    </div>
+    <form id="interview-form" class="modal-body stacked-form" novalidate>
+      <input type="hidden" id="interview-id" />
+      <div class="form-group">
+        <label for="interview-application">Application *</label>
+        <select id="interview-application" name="applicationId" required></select>
+      </div>
+      <div class="form-group">
+        <label for="interview-type">Interview type *</label>
+        <select id="interview-type" name="interviewType" required>
+          <option>Phone Screen</option><option>HR Interview</option><option>Technical Interview</option>
+          <option>Coding Interview</option><option>Behavioral Interview</option><option>Final Interview</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="interview-date">Date *</label>
+        <input id="interview-date" name="interviewDate" type="date" required />
+      </div>
+      <div class="form-group">
+        <label for="interview-time">Time</label>
+        <input id="interview-time" name="interviewTime" type="time" />
+      </div>
+      <div class="form-group">
+        <label for="interview-interviewer">Interviewer</label>
+        <input id="interview-interviewer" name="interviewer" maxlength="150" />
+      </div>
+      <div class="form-group">
+        <label for="interview-location">Location / Meeting URL</label>
+        <input id="interview-location" name="locationOrUrl" maxlength="300" />
+      </div>
+      <div class="form-group">
+        <label for="interview-prep">Preparation notes</label>
+        <textarea id="interview-prep" name="prepNotes" rows="2" maxlength="5000"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="interview-notes">Notes</label>
+        <textarea id="interview-notes" name="notes" rows="2" maxlength="5000"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="interview-result">Result</label>
+        <select id="interview-result" name="result">
+          <option>Pending</option><option>Passed</option><option>Failed</option><option>Cancelled</option><option>Rescheduled</option>
+        </select>
+      </div>
+      <p class="form-message" id="interview-form-message" role="alert"></p>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="interview-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Interview</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== FOLLOW-UP FORM MODAL ===================== -->
+<div class="modal-overlay" id="followup-modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="followup-modal-title">
+    <div class="modal-header">
+      <h3 id="followup-modal-title">Add Follow-Up</h3>
+      <button class="icon-btn modal-close" data-close-modal="followup-modal" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#x"></use></svg></button>
+    </div>
+    <form id="followup-form" class="modal-body stacked-form" novalidate>
+      <input type="hidden" id="followup-id" />
+      <div class="form-group">
+        <label for="followup-application">Application *</label>
+        <select id="followup-application" name="applicationId" required></select>
+      </div>
+      <div class="form-group">
+        <label for="followup-date">Follow-up date *</label>
+        <input id="followup-date" name="followupDate" type="date" required />
+      </div>
+      <div class="form-group">
+        <label for="followup-type">Type</label>
+        <input id="followup-type" name="followupType" maxlength="100" placeholder="e.g. Thank-you email" />
+      </div>
+      <div class="form-group">
+        <label for="followup-notes">Notes</label>
+        <textarea id="followup-notes" name="notes" rows="3" maxlength="5000"></textarea>
+      </div>
+      <label class="checkbox-inline">
+        <input type="checkbox" id="followup-completed" name="completed" /> Completed
+      </label>
+      <p class="form-message" id="followup-form-message" role="alert"></p>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="followup-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Follow-Up</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== IMPORT MODAL ===================== -->
+<div class="modal-overlay" id="import-modal" hidden>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+    <div class="modal-header">
+      <h3 id="import-modal-title">Import Applications from CSV</h3>
+      <button class="icon-btn modal-close" data-close-modal="import-modal" aria-label="Close"><svg class="icon" aria-hidden="true" focusable="false"><use href="icons/lucide.svg#x"></use></svg></button>
+    </div>
+    <div class="modal-body">
+      <div id="import-step-upload">
+        <p>Choose a CSV file exported from this app (or matching column names like Company Name, Job Title, Application Date).</p>
+        <input type="file" id="import-file-input" accept=".csv,text/csv" />
+        <p class="form-message" id="import-message" role="alert"></p>
+      </div>
+      <div id="import-step-preview" hidden>
+        <p id="import-summary"></p>
+        <div class="import-preview-scroll" id="import-preview-body"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" data-close-modal="import-modal">Cancel</button>
+      <button type="button" class="btn btn-primary" id="import-confirm-btn" hidden>Confirm Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CONFIRM DIALOG ===================== -->
+<div class="modal-overlay" id="confirm-modal" hidden>
+  <div class="modal modal-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-header">
+      <h3 id="confirm-modal-title">Are you sure?</h3>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-modal-message"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" id="confirm-cancel-btn">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "name": "job-application-tracker",
+  "version": "1.0.0",
+  "description": "Full-stack Job Application Tracker - track job applications, interviews, follow-ups and analytics.",
+  "main": "backend/server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "db:init": "node backend/database/init.js",
+    "serve:frontend": "node backend/static-frontend-server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-validator": "^7.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "lucide-static": "^1.61.0"
+  }
+}
